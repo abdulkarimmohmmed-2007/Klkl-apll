@@ -1,39 +1,23 @@
 import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import pg from "pg";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
-app.use(cors());
-app.use(bodyParser.json());
+const PORT = process.env.PORT || 10000;
 
-const db = new pg.Client({
-  connectionString: process.env.DATABASE_URL,
-  ssl: { rejectUnauthorized: false }
-});
-db.connect();
+// إعداد المسار الحالي حتى يقدر يوصل للملفات
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-const USER = "admin";
-const PASS = "12345";
+// يخلي السيرفر يقرأ الملفات داخل مجلد المشروع
+app.use(express.static(__dirname));
 
-app.post("/login", (req, res) => {
-  const { username, password } = req.body;
-  if (username === USER && password === PASS) {
-    res.json({ success: true });
-  } else {
-    res.json({ success: false });
-  }
+// لما المستخدم يدخل الرابط الرئيسي
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html")); // هنا يفتح الصفحة الرئيسية
 });
 
-app.post("/add-invoice", async (req, res) => {
-  const { name, amount, date } = req.body;
-  await db.query("INSERT INTO invoices (name, amount, date) VALUES ($1,$2,$3)", [name, amount, date]);
-  res.json({ message: "تمت الإضافة بنجاح" });
+// تشغيل السيرفر
+app.listen(PORT, () => {
+  console.log(`✅ Server running on port ${PORT}`);
 });
-
-app.get("/invoices", async (req, res) => {
-  const result = await db.query("SELECT * FROM invoices ORDER BY id DESC");
-  res.json(result.rows);
-});
-
-app.listen(10000, () => console.log("✅ Server running on port 10000"));
