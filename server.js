@@ -1,38 +1,45 @@
 import express from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import pg from "pg";
 import path from "path";
 import { fileURLToPath } from "url";
-import bodyParser from "body-parser";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 
-// إعداد المجلد الحالي حتى يقدر يوصّل للملفات
+// إعداد المسار الحالي حتى نقدر نوصل للملفات
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// يخلي السيرفر يقرأ الملفات داخل مجلد المشروع
-app.use(express.static(__dirname));
+// ميدل وير
+app.use(cors());
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static(__dirname)); // يخلي السيرفر يقرأ ملفات HTML و CSS و JS
 
-// بيانات الدخول المؤقتة (تقدر تغيرها)
+// إعداد الاتصال بقاعدة البيانات (اختياري)
+const db = new pg.Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false },
+});
+db.connect();
+
+// بيانات تسجيل الدخول
 const USER = "admin";
 const PASS = "12345";
 
-// صفحة تسجيل الدخول
+// مسار تسجيل الدخول
 app.post("/login", (req, res) => {
   const { username, password } = req.body;
 
   if (username === USER && password === PASS) {
-    // نجاح
-    res.send("<h2>تم تسجيل الدخول بنجاح ✅</h2>");
+    res.json({ success: true });
   } else {
-    // فشل
-    res.send("<h2>اسم المستخدم أو كلمة المرور خطأ ❌</h2>");
+    res.json({ success: false });
   }
 });
 
-// الصفحة الرئيسية
+// مسار الصفحة الرئيسية
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "login.html"));
 });
