@@ -1,7 +1,7 @@
 {
   "name": "abdulkarim-accounting",
   "version": "1.0.0",
-  "description": "نظام عبدالكريم للحسابات",
+  "description": "نظام عبد الكريم للحسابات",
   "main": "server.js",
   "type": "module",
   "scripts": {
