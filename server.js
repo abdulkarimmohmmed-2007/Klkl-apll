@@ -88,7 +88,67 @@ app.get("/test-db", async (req, res) => {
     res.json({ connected: false, error: err.message });
   }
 });
+// =====================
+// 📘 نظام الحسابات
+// =====================
 
+// إنشاء الجداول إن لم تكن موجودة
+db.query(`
+  CREATE TABLE IF NOT EXISTS students (
+    id SERIAL PRIMARY KEY,
+    name TEXT NOT NULL,
+    phone TEXT,
+    course TEXT,
+    total_amount NUMERIC NOT NULL,
+    paid_amount NUMERIC DEFAULT 0,
+    remaining NUMERIC DEFAULT 0
+  )
+`);
+
+db.query(`
+  CREATE TABLE IF NOT EXISTS commissions (
+    id SERIAL PRIMARY KEY,
+    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+    type TEXT,
+    owner TEXT,
+    amount NUMERIC,
+    paid BOOLEAN DEFAULT false
+  )
+`);
+
+// ➕ إضافة طالب
+app.post("/students", async (req, res) => {
+  const { name, phone, course, total_amount } = req.body;
+  const result = await db.query(
+    "INSERT INTO students (name, phone, course, total_amount, remaining) VALUES ($1,$2,$3,$4,$4) RETURNING id",
+    [name, phone, course, total_amount]
+  );
+  res.json({ success: true, id: result.rows[0].id });
+});
+
+// ➕ إضافة نسبة
+app.post("/commissions", async (req, res) => {
+  const { student_id, type, owner, amount } = req.body;
+  await db.query(
+    "INSERT INTO commissions (student_id, type, owner, amount) VALUES ($1,$2,$3,$4)",
+    [student_id, type, owner, amount]
+  );
+  await db.query("UPDATE students SET remaining = remaining - $1 WHERE id = $2", [amount, student_id]);
+  res.json({ success: true });
+});
+
+// 🔍 عرض الطلاب
+app.get("/students", async (req, res) => {
+  const result = await db.query("SELECT * FROM students ORDER BY id DESC");
+  res.json(result.rows);
+});
+
+// 🔍 عرض النسب حسب الطالب
+app.get("/commissions", async (req, res) => {
+  const student_id = req.query.student_id;
+  const result = await db.query("SELECT * FROM commissions WHERE student_id=$1", [student_id]);
+  res.json(result.rows);
+});
 // ==========================
 // 🚀 تشغيل السيرفر
 // ==========================

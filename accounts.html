@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>💰 الحسابات - نظام عبدالكريم</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      text-align: center;
+      margin: 0;
+    }
+    header {
+      background: #0078D7;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+    form, .commissions-section {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      margin: 20px auto;
+      width: 340px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    input, select, textarea {
+      display: block;
+      width: 90%;
+      margin: 10px auto;
+      padding: 8px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      background: #0078D7;
+      color: white;
+      border: none;
+      padding: 8px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    table {
+      margin: 20px auto;
+      border-collapse: collapse;
+      width: 90%;
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+    }
+    th {
+      background: #0078D7;
+      color: white;
+    }
+    .paid { background-color: #c8f7c5; } /* أخضر */
+    .unpaid { background-color: #f9c0c0; } /* أحمر فاتح */
+    .platform { background-color: #d5f5e3; } /* منصة */
+  </style>
+</head>
+<body>
+  <header>💰 الحسابات - نظام عبدالكريم</header>
+
+  <form id="studentForm">
+    <h3>➕ إضافة طالب</h3>
+    <input type="text" id="name" placeholder="اسم الطالب" required />
+    <input type="text" id="phone" placeholder="رقم الطالب" required />
+    <input type="text" id="course" placeholder="اسم الكورس" required />
+    <input type="number" id="total" placeholder="المبلغ الكلي" required />
+    <button type="submit">إضافة الطالب</button>
+  </form>
+
+  <div class="commissions-section" style="display:none;">
+    <h3>🏷️ إضافة نسب للطالب</h3>
+    <select id="type" required>
+      <option value="">اختر نوع الجهة</option>
+      <option value="منصة">منصة (ثابت)</option>
+      <option value="مستشفى">مستشفى</option>
+      <option value="كلية">كلية</option>
+      <option value="ممثل">ممثل</option>
+    </select>
+    <input type="text" id="ownerName" placeholder="اسم الجهة" />
+    <input type="number" id="amount" placeholder="مبلغ النسبة" required />
+    <button id="addCommission">إضافة النسبة</button>
+  </div>
+
+  <table id="studentsTable">
+    <thead>
+      <tr>
+        <th>اسم الطالب</th>
+        <th>رقم</th>
+        <th>الكورس</th>
+        <th>المبلغ الكلي</th>
+        <th>المتبقي</th>
+        <th>تفاصيل النسب</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <button onclick="logout()">🔴 تسجيل الخروج</button>
+
+  <script>
+    let currentStudentId = null;
+
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "/login.html";
+    }
+
+    document.getElementById("studentForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const data = {
+        name: document.getElementById("name").value,
+        phone: document.getElementById("phone").value,
+        course: document.getElementById("course").value,
+        total_amount: document.getElementById("total").value
+      };
+      const res = await fetch("/students", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      const result = await res.json();
+      currentStudentId = result.id;
+      document.querySelector(".commissions-section").style.display = "block";
+      loadStudents();
+    });
+
+    document.getElementById("addCommission").addEventListener("click", async () => {
+      if (!currentStudentId) return alert("أضف طالب أولاً!");
+      const data = {
+        student_id: currentStudentId,
+        type: document.getElementById("type").value,
+        owner: document.getElementById("ownerName").value,
+        amount: document.getElementById("amount").value
+      };
+      await fetch("/commissions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+      });
+      document.getElementById("amount").value = "";
+      loadStudents();
+    });
+
+    async function loadStudents() {
+      const res = await fetch("/students");
+      const data = await res.json();
+      const tbody = document.querySelector("#studentsTable tbody");
+      tbody.innerHTML = "";
+      data.forEach(st => {
+        const className = st.remaining <= 0 ? "paid" : "unpaid";
+        tbody.innerHTML += `
+          <tr class="${className}">
+            <td>${st.name}</td>
+            <td>${st.phone}</td>
+            <td>${st.course}</td>
+            <td>${st.total_amount}</td>
+            <td>${st.remaining}</td>
+            <td><button onclick="viewCommissions(${st.id})">عرض</button></td>
+          </tr>`;
+      });
+    }
+
+    async function viewCommissions(id) {
+      const res = await fetch(`/commissions?student_id=${id}`);
+      const data = await res.json();
+      let details = "";
+      data.forEach(c => {
+        const color = c.type === "منصة" ? "platform" : (c.paid ? "paid" : "unpaid");
+        details += 🟢 ${c.type} (${c.owner}) - ${c.amount} د.ع ${c.paid ? "✅" : "❌"}\n;
+      });
+      alert(details);
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "/login.html";
+    }
+
+    loadStudents();
+  </script>
+</body>
+</html>
