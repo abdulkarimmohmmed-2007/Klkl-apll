@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>لوحة التحكم - نظام عبدالكريم</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      text-align: center;
+    }
+
+    header {
+      background: #0078D7;
+      color: white;
+      padding: 15px;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .cards {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 50px;
+      gap: 20px;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      width: 200px;
+      height: 150px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      transition: 0.3s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      background: #0078D7;
+      color: white;
+      transform: scale(1.05);
+    }
+
+    button {
+      background: #d9534f;
+      border: none;
+      padding: 10px 20px;
+      color: white;
+      border-radius: 5px;
+      margin-top: 40px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>👑 لوحة التحكم - نظام عبدالكريم</header>
+
+  <div class="cards">
+    <div class="card" onclick="alert('قيد التطوير 💰')">💰 الحسابات</div>
+    <div class="card" onclick="alert('قيد التطوير 👥')">👥 المستخدمين</div>
+    <div class="card" onclick="alert('قيد التطوير 📊')">📊 التقارير</div>
+  </div>
+
+  <button onclick="logout()">تسجيل الخروج</button>
+
+  <script>
+    // فحص هل المستخدم مسجل دخول
+    if (!localStorage.getItem("loggedIn")) {
+      window.location.href = "/login.html";
+    }
+
+    function logout() {
+      localStorage.removeItem("loggedIn");
+      window.location.href = "/login.html";
+    }
+  </script>
+</body>
+</html>
