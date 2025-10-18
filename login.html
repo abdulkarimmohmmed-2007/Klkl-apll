@@ -67,16 +67,20 @@
 
         const result = await response.json();
 
-        if (result.success) {
-          msg.innerText = "✅ تم تسجيل الدخول بنجاح!";
-          msg.style.color = "green";
-          setTimeout(() => {
-            window.location.href = "/index.html";
-          }, 1000);
-        } else {
-          msg.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
-          msg.style.color = "red";
-        }
+       if (result.success) {
+  // حفظ حالة الدخول
+  localStorage.setItem("loggedIn", "true");
+
+  msg.innerText = "✅ تم تسجيل الدخول بنجاح!";
+  msg.style.color = "green";
+
+  setTimeout(() => {
+    window.location.href = "/index.html";
+  }, 1000);
+} else {
+  msg.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
+  msg.style.color = "red";
+}
       } catch (err) {
         msg.innerText = "⚠️ حدث خطأ في الاتصال بالسيرفر";
         msg.style.color = "red";
