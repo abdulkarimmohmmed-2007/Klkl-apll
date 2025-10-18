@@ -1,5 +1,5 @@
 // ============================
-// 🟢 استيراد المكتبات
+// 🟢 Import libraries
 // ============================
 import express from "express";
 import cors from "cors";
@@ -9,18 +9,18 @@ import path from "path";
 import { fileURLToPath } from "url";
 
 // ============================
-// ⚙️ إعداد التطبيق
+// ⚙️ App setup
 // ============================
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
-app.use(express.static(path.resolve("./"))); // حتى يقرأ ملفات HTML
+app.use(express.static(path.resolve("./"))); // serve HTML files
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ============================
-// 🟢 الاتصال بقاعدة البيانات
+// 🟢 Connect to Database
 // ============================
 const db = new pg.Client({
   connectionString: process.env.DATABASE_URL,
@@ -28,48 +28,48 @@ const db = new pg.Client({
 });
 
 db.connect()
-  .then(() => console.log("✅ Connected to database"))
+  .then(async () => {
+    console.log("✅ Connected to database");
+
+    // ✅ Create tables once connected
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS students (
+        id SERIAL PRIMARY KEY,
+        name TEXT NOT NULL,
+        phone TEXT,
+        course TEXT,
+        total_amount NUMERIC NOT NULL,
+        paid_amount NUMERIC DEFAULT 0,
+        remaining NUMERIC DEFAULT 0
+      );
+    `);
+
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS commissions (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
+        type TEXT,
+        owner TEXT,
+        amount NUMERIC,
+        paid BOOLEAN DEFAULT false
+      );
+    `);
+  })
   .catch((err) => console.error("❌ Database connection error:", err));
 
 // ============================
-// 🧱 إنشاء الجداول إذا غير موجودة
-// ============================
-await db.query(`
-  CREATE TABLE IF NOT EXISTS students (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
-    phone TEXT,
-    course TEXT,
-    total_amount NUMERIC NOT NULL,
-    paid_amount NUMERIC DEFAULT 0,
-    remaining NUMERIC DEFAULT 0
-  );
-`);
-
-await db.query(`
-  CREATE TABLE IF NOT EXISTS commissions (
-    id SERIAL PRIMARY KEY,
-    student_id INTEGER REFERENCES students(id) ON DELETE CASCADE,
-    type TEXT,
-    owner TEXT,
-    amount NUMERIC,
-    paid BOOLEAN DEFAULT false
-  );
-`);
-
-// ============================
-// ➕ إضافة طالب جديد
+// ➕ Add Student
 // ============================
 app.post("/students", async (req, res) => {
   try {
     const { name, phone, course, total_amount } = req.body;
 
     if (!name  !course  !total_amount) {
-      return res.json({ success: false, error: "الحقول غير مكتملة" });
+      return res.json({ success: false, error: "Missing fields" });
     }
 
     const result = await db.query(
-      "INSERT INTO students (name, phone, course, total_amount, remaining) VALUES ($1, $2, $3, $4, $4) RETURNING *",
+      "INSERT INTO students (name, phone, course, total_amount, remaining) VALUES ($1,$2,$3,$4,$4) RETURNING *",
       [name, phone, course, total_amount]
     );
 
@@ -81,7 +81,7 @@ app.post("/students", async (req, res) => {
 });
 
 // ============================
-// 📋 جلب جميع الطلاب
+// 📋 Get all students
 // ============================
 app.get("/students", async (req, res) => {
   try {
@@ -94,7 +94,7 @@ app.get("/students", async (req, res) => {
 });
 
 // ============================
-// 🔍 اختبار الاتصال
+// 🔍 DB test
 // ============================
 app.get("/test-db", async (req, res) => {
   try {
@@ -106,7 +106,7 @@ app.get("/test-db", async (req, res) => {
 });
 
 // ============================
-// 🌐 تشغيل السيرفر
+// 🌐 Run server
 // ============================
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
