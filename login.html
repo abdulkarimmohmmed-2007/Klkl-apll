@@ -2,48 +2,80 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <title>نظام عبدالكريم</title>
+  <title>تسجيل الدخول - نظام عبدالكريم</title>
   <style>
     body {
       font-family: sans-serif;
-      text-align: center;
       background: #f2f2f2;
-      margin-top: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-    .container {
+    .card {
       background: white;
-      padding: 40px;
+      padding: 30px;
       border-radius: 10px;
       box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      width: 300px;
-      margin: auto;
+      text-align: center;
+    }
+    input {
+      display: block;
+      width: 200px;
+      margin: 10px auto;
+      padding: 8px;
     }
     button {
-      background: #e74c3c;
+      padding: 8px 12px;
+      background: #0078D7;
       color: white;
       border: none;
-      padding: 10px 15px;
       border-radius: 5px;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <h2>✅ مرحبًا بك في نظام عبدالكريم</h2>
-    <button onclick="logout()">تسجيل الخروج</button>
+  <div class="card">
+    <h2>تسجيل الدخول</h2>
+    <input type="text" id="username" placeholder="اسم المستخدم" />
+    <input type="password" id="password" placeholder="كلمة المرور" />
+    <button onclick="login()">دخول</button>
+    <p id="msg"></p>
   </div>
 
   <script>
-    // ✅ فحص حالة تسجيل الدخول
-    if (!localStorage.getItem("loggedIn")) {
-      window.location.href = "/login.html";
+    async function login() {
+      const username = document.getElementById("username").value;
+      const password = document.getElementById("password").value;
+
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const result = await response.json();
+
+      const msg = document.getElementById("msg");
+      if (result.success) {
+        // ✅ تسجيل حالة الدخول هنا
+        localStorage.setItem("loggedIn", "true");
+        msg.innerText = "✅ تم تسجيل الدخول بنجاح!";
+        msg.style.color = "green";
+
+        setTimeout(() => {
+          window.location.href = "/index.html";
+        }, 800);
+      } else {
+        msg.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
+        msg.style.color = "red";
+      }
     }
 
-    // 🚪 تسجيل الخروج
-    function logout() {
-      localStorage.removeItem("loggedIn");
-      window.location.href = "/login.html";
+    // 🧠 إذا كان داخل مسبقًا، يدخل تلقائيًا
+    if (localStorage.getItem("loggedIn") === "true") {
+      window.location.href = "/index.html";
     }
   </script>
 </body>
