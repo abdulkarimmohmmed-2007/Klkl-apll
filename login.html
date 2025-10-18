@@ -24,7 +24,6 @@
       width: 200px;
       margin: 10px auto;
       padding: 8px;
-      text-align: center;
     }
     button {
       padding: 8px 12px;
@@ -33,10 +32,6 @@
       border: none;
       border-radius: 5px;
       cursor: pointer;
-    }
-    #msg {
-      margin-top: 10px;
-      font-weight: bold;
     }
   </style>
 </head>
@@ -53,36 +48,24 @@
     async function login() {
       const username = document.getElementById("username").value;
       const password = document.getElementById("password").value;
+
+      const response = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password })
+      });
+
+      const result = await response.json();
+
       const msg = document.getElementById("msg");
-
-      msg.innerText = "⏳ جاري التحقق...";
-      msg.style.color = "gray";
-
-      try {
-        const response = await fetch("/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ username, password })
-        });
-
-        const result = await response.json();
-
-       if (result.success) {
-  // حفظ حالة الدخول
-  localStorage.setItem("loggedIn", "true");
-
-  msg.innerText = "✅ تم تسجيل الدخول بنجاح!";
-  msg.style.color = "green";
-
-  setTimeout(() => {
-    window.location.href = "/index.html";
-  }, 1000);
-} else {
-  msg.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
-  msg.style.color = "red";
-}
-      } catch (err) {
-        msg.innerText = "⚠️ حدث خطأ في الاتصال بالسيرفر";
+      if (result.success) {
+        msg.innerText = "✅ تم تسجيل الدخول بنجاح!";
+        msg.style.color = "green";
+        setTimeout(() => {
+          window.location.href = "/index.html"; // يفتح الصفحة الرئيسية
+        }, 1000);
+      } else {
+        msg.innerText = "❌ اسم المستخدم أو كلمة المرور غير صحيحة";
         msg.style.color = "red";
       }
     }
