@@ -79,6 +79,15 @@ app.get("/test-db", async (req, res) => {
     res.json({ connected: false, error: err.message });
   }
 });
+import path from "path";
+import { fileURLToPath } from "url";
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// لما المستخدم يفتح الصفحة الرئيسية، نعرض login.html
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "login.html"));
+});
 const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
